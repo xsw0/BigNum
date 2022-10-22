@@ -154,3 +154,8 @@ std::string Natural::to_string(size_t base) const {
   reverse(result.begin(), result.end());
   return result;
 }
+
+std::ostream &operator<<(std::ostream &os, const Natural &natural) {
+  os << natural.to_string();
+  return os;
+}

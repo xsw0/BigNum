@@ -6,8 +6,9 @@
 #include "binary.h"
 
 Natural &Natural::operator+=(const Natural &rhs) {
-  *this = *this + rhs;
-  return *this;
+//  if (capacity < 1 + std::max(size, rhs.size)) {
+  return *this = operator+(rhs);
+//  }
 }
 
 Natural Natural::operator+(const Natural &rhs) const {
@@ -75,7 +76,5 @@ Natural &Natural::operator-=(const Natural &rhs) {
 }
 
 Natural Natural::operator-(const Natural &rhs) const {
-  Natural natural{*this};
-  natural -= rhs;
-  return natural;
+  return Natural(*this) -= rhs;
 }

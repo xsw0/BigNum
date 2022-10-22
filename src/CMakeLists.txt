@@ -4,4 +4,6 @@ target_link_libraries(BigNum Natural)
 
 add_executable(Test BinaryTest.cpp NaturalTest.cpp)
 target_link_libraries(Test PRIVATE Catch2::Catch2WithMain Natural)
-catch_discover_tests(Test)
+catch_discover_tests(Test
+        EXTRA_ARGS --rng-seed 0
+        )
