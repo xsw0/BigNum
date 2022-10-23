@@ -16,7 +16,7 @@ Natural::Natural(uint64_t u) {
     data[i] = (u >> (bits_width * i)) & mask;
   }
   size = capacity;
-  while (size != 0 && data[size - 1] == 0) {
+  while (size != 0 && back() == 0) {
     --size;
   }
 }

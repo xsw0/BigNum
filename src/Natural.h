@@ -35,20 +35,33 @@ public:
   [[nodiscard]] bool operator==(const Natural &rhs) const;
   [[nodiscard]] std::strong_ordering operator<=>(const Natural &rhs) const;
 
-  Natural operator>>(size_t offset) const;
-  Natural operator<<(size_t offset) const;
+  [[nodiscard]] Natural operator>>(size_t offset) const;
+  [[nodiscard]] Natural operator<<(size_t offset) const;
   Natural &operator>>=(size_t offset) { return *this = operator>>(offset); }
   Natural &operator<<=(size_t offset) { return *this = operator<<(offset); }
 
-  Natural operator+(const Natural &rhs) const;
-  Natural operator-(const Natural &rhs) const;
+  [[nodiscard]] Natural operator+(const Natural &rhs) const;
+  [[nodiscard]] Natural operator-(const Natural &rhs) const;
+  [[nodiscard]] Natural operator*(const Natural &rhs) const;
+  [[nodiscard]] Natural operator/(const Natural &rhs) const;
+  [[nodiscard]] Natural operator%(const Natural &rhs) const;
+
   Natural &operator+=(const Natural &rhs);
   Natural &operator-=(const Natural &rhs);
-
+  Natural &operator*=(const Natural &rhs);
+  Natural &operator/=(const Natural &rhs);
+  Natural &operator%=(const Natural &rhs);
 private:
   void reserve_data(size_t cap);
+
+  constexpr uint_t &back() { return data[size - 1]; };
+  [[nodiscard]] constexpr uint_t back() const { return data[size - 1]; };
+
   constexpr uint_t &operator[](size_t index) { return data[index]; };
-  constexpr uint_t operator[](size_t index) const { return data[index]; };
+  [[nodiscard]] constexpr uint_t operator[](size_t index) const { return data[index]; };
+
+  void carry_to(size_t index, uint_t n);
+  [[nodiscard]] std::pair<Natural, Natural> div(const Natural &rhs) const;
 
   uint_t *data;
   size_t size;

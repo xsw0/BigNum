@@ -12,7 +12,7 @@ using namespace Catch::Generators;
 TEST_CASE("Natural test") {
   auto num = GENERATE(
     as<uint64_t>(), 0, 1, 2, 3,
-    take(20, random<uint64_t>(0, std::numeric_limits<uint64_t>::max() / 2)));
+    take(20, random<uint64_t>(0, std::numeric_limits<uint32_t>::max())));
 
   auto str = std::to_string(num);
 
@@ -72,7 +72,7 @@ TEST_CASE("Natural test") {
 
   auto rhs_num = GENERATE_COPY(
     as<uint64_t>(), num, 0, 1, 2, 3,
-    take(20, random<uint64_t>(0, std::numeric_limits<uint64_t>::max() / 2)));
+    take(20, random<uint64_t>(0, std::numeric_limits<uint32_t>::max())));
   auto rhs_str = std::to_string(rhs_num);
   Natural rhs(rhs_num);
 
@@ -94,6 +94,14 @@ TEST_CASE("Natural test") {
       REQUIRE(rhs == (sum - lhs));
       REQUIRE(lhs == (Natural(sum) -= rhs));
       REQUIRE(rhs == (Natural(sum) -= lhs));
+    }
+
+    SECTION("mul") {
+      auto mul_num = lhs_num * rhs_num;
+      REQUIRE(Natural(mul_num) == (lhs * rhs));
+      REQUIRE(Natural(mul_num) == (rhs * lhs));
+      REQUIRE(Natural(mul_num) == (Natural(lhs) *= rhs));
+      REQUIRE(Natural(mul_num) == (Natural(rhs) *= lhs));
     }
 
     SECTION("cmp") {
