@@ -53,6 +53,18 @@ constexpr inline U bits(size_t size) {
 }
 
 template<UnsignedIntegral U>
+constexpr inline U high_bits(U u, size_t size) {
+  constexpr size_t bits_width = sizeof(U) * 8;
+  return u >> (bits_width - size);
+}
+
+template<UnsignedIntegral U>
+constexpr inline U low_bits(U u, size_t size) {
+  constexpr size_t bits_width = sizeof(U) * 8;
+  return u & bits<U>(size);
+}
+
+template<UnsignedIntegral U>
 constexpr inline U low_half(U n) {
   constexpr size_t bits_width = sizeof(U) * 8;
   constexpr size_t half_width = bits_width / 2;
@@ -129,7 +141,43 @@ constexpr inline uint32_t carry_mul<uint32_t>(uint32_t lhs, uint32_t rhs) {
 template<UnsignedIntegral U>
 constexpr inline U cat(U low, U high, size_t offset) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  return ((high & bits<U>(offset)) << (bits_width - offset)) | (low >> offset);
+  return (high << (bits_width - offset)) | (low >> offset);
+}
+
+template<UnsignedIntegral U>
+constexpr inline void move_forward(U *dest, const U *src, size_t size) {
+  for (size_t i = 0; i != size; ++i) { dest[i] = src[i]; }
+}
+
+template<UnsignedIntegral U>
+constexpr inline void move_backward(U *dest, const U *src, size_t size) {
+  for (size_t i = size; i != 0; --i) { dest[i - 1] = src[i - 1]; }
+}
+
+template<UnsignedIntegral U>
+constexpr inline U bits_right_move(U *dest, const U *src, size_t size, size_t offset) {
+  constexpr size_t bits_width = sizeof(U) * 8;
+  assert(size != 0);
+  size_t bound = size - 1;
+  U result = Binary::cat(U{0}, src[0], offset);
+  for (size_t i = 0; i != bound; ++i) {
+    dest[i] = Binary::cat(src[i], src[i + 1], offset);
+  }
+  dest[bound] = Binary::cat(src[bound], U{0}, offset);
+  return result;
+}
+
+template<UnsignedIntegral U>
+constexpr inline U bits_left_move(U *dest, const U *src, size_t size, size_t offset) {
+  constexpr size_t bits_width = sizeof(U) * 8;
+  assert(size != 0);
+  size_t bound = size - 1;
+  U result = Binary::cat(src[bound], U{0}, bits_width - offset);
+  for (size_t i = bound; i != 0; --i) {
+    dest[i] = Binary::cat(src[i - 1], src[i], bits_width - offset);
+  }
+  dest[0] = Binary::cat(U{0}, src[0], bits_width - offset);
+  return result;
 }
 
 }

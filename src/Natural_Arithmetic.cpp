@@ -5,82 +5,76 @@
 #include "Natural.h"
 #include "binary.h"
 
-Natural &Natural::operator+=(const Natural &rhs) {
-//  if (capacity < 1 + std::max(size, rhs.size)) {
-  return *this = operator+(rhs);
-//  }
-}
-
-Natural Natural::operator+(const Natural &rhs) const {
-  auto &lhs = *this;
-
-  if (lhs.size > rhs.size) {
-    return rhs + lhs;
-  }
+Natural Natural::add(Natural *dest, const Natural &lhs, const Natural &rhs) {
+  if (lhs.size > rhs.size) { return add(dest, rhs, lhs); }
 
   Natural natural;
-  natural.reserve_data(1 + rhs.size);
+  if (!dest || dest->capacity <= rhs.size) {
+    dest = &natural;
+  }
+  dest->reserve_data(rhs.size + 1);
 
   uint_t carry = 0;
   size_t i = 0;
   for (; i != lhs.size; ++i) {
-    uint_t sum = lhs[i] + rhs[i];
-    natural[i] = sum + carry;
-    carry = Binary::carry_add(lhs[i], rhs[i]) + Binary::carry_add(sum, carry);
+    uint_t sum = lhs[i] + rhs[i] + carry;
+    carry = Binary::carry_add(lhs[i], rhs[i]) + Binary::carry_add<uint_t>(lhs[i] + rhs[i], carry);
+    dest->data[i] = sum;
   }
 
   for (; i != rhs.size; ++i) {
-    natural[i] = rhs[i] + carry;
+    uint_t sum = rhs[i] + carry;
     carry = Binary::carry_add(carry, rhs[i]);
+    dest->data[i] = sum;
   }
 
-  if (carry) {
-    assert(carry == 1);
-    natural[i] = carry;
+  natural[rhs.size] = carry;
+  natural.size = rhs.size + carry;
+
+  return *dest;
+}
+
+Natural Natural::sub(Natural *dest, const Natural &lhs, const Natural &rhs) {
+  if (lhs.size < rhs.size) { throw std::runtime_error("overflow"); }
+
+  Natural natural;
+  if (!dest || dest->capacity < lhs.size) {
+    dest = &natural;
+  }
+  dest->reserve_data(lhs.size);
+
+  uint_t borrow = 0;
+  size_t i = 0;
+  for (; i < rhs.size; ++i) {
+    if (borrow) {
+      borrow = lhs[i] <= rhs[i];
+      dest->data[i] = lhs[i] - rhs[i] - 1;
+    } else {
+      borrow = lhs[i] < rhs[i];
+      dest->data[i] = lhs[i] - rhs[i];
+    }
+  }
+  while (i != lhs.size && borrow) {
+    borrow = lhs[i] == 0;
+    dest->data[i] = lhs[i] - 1;
     ++i;
   }
-
-  natural.size = i;
-  return natural;
-}
-
-Natural &Natural::operator-=(const Natural &rhs) {
-  auto &lhs = *this;
-
-  assert(lhs >= rhs);
-  if (lhs.size < rhs.size) {
-    throw std::runtime_error("overflow");
-  } else {
-    uint_t borrow = 0;
-    size_t i = 0;
-    for (; i < rhs.size; ++i) {
-      if (lhs[i]) {
-        lhs[i] -= borrow;
-        borrow = lhs[i] < rhs[i];
-        lhs[i] -= rhs[i];
-      } else {
-        lhs[i] -= borrow + rhs[i];
-        borrow = rhs[i] || borrow;
-      }
-    }
-    if (borrow && lhs.size == rhs.size) {
-      throw std::runtime_error("overflow");
-    }
-    if (borrow) {
-      while (lhs[i] == 0) {
-        ++i;
-      }
-      lhs[i] -= borrow;
-    }
-    while (lhs.size != 0 && lhs.back() == 0) {
-      --lhs.size;
+  if (dest != &lhs) {
+    for (; i != lhs.size; ++i) {
+      dest->data[i] = lhs[i];
     }
   }
-  return *this;
-}
-
-Natural Natural::operator-(const Natural &rhs) const {
-  return Natural(*this) -= rhs;
+  if (borrow) {
+    if (dest != &natural) {
+      *dest += rhs;
+      assert(*dest >= Natural{1} << rhs.size * bits_width);
+      *dest -= Natural{1} << rhs.size * bits_width;
+    }
+    throw std::runtime_error("overflow");
+  }
+  dest->size = lhs.size;
+  while (dest->size != 0 && dest->back() == 0) { --dest->size; }
+  return *dest;
 }
 
 void Natural::carry_to(size_t index, uint_t carry) {
@@ -124,7 +118,50 @@ Natural Natural::operator*(const Natural &rhs) const {
 }
 
 std::pair<Natural, Natural> Natural::div(const Natural &rhs) const {
-
+//  auto &lhs = *this;
+//  if (rhs.size == 0) { throw std::runtime_error("div zero error"); }
+//  if (lhs.size < rhs.size) { return {{}, lhs}; }
+//
+//  size_t offset = lhs.size - rhs.size;
+//
+//  Natural remainder = *this;
+//  Natural quotient;
+//  quotient.reserve_data(offset + 1);
+//
+//  auto divisor = rhs << offset * bits_width;
+//  while (true) {
+//    assert(remainder.size == divisor.size);
+//    auto so = remainder <=> divisor;
+//    if (so == std::strong_ordering::less) {
+//      if (offset == 0) { break; }
+//      --offset;
+//      quotient <<= bits_width;
+//      divisor >>= bits_width;
+//    } else if (so == std::strong_ordering::greater) {
+//      if (remainder.back() == divisor.back()) {
+//        remainder -= divisor;
+//        quotient += Natural{1};
+//        if (offset == 0) { break; }
+//        --offset;
+//        quotient <<= bits_width;
+//        divisor >>= bits_width;
+//      } else {
+//        auto v = Natural(remainder.back() / (divisor.back() + 1));
+//        if (v == Natural{0}) {
+//          quotient += Natural{1};
+//          remainder -= v;
+//          quotient <<= bits_width;
+//          divisor >>= bits_width;
+//        } else {
+//          quotient += v;
+//          remainder -= divisor * v;
+//        }
+//      }
+//    } else {
+//      return {quotient + Natural{1}, {}};
+//    }
+//  }
+//  return {quotient, remainder};
 }
 
 Natural &Natural::operator/=(const Natural &rhs) {

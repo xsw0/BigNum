@@ -3,8 +3,11 @@
 //
 
 #include "Natural.h"
-#include "binary.h"
+#include <iostream>
+#include <string>
 #include <optional>
+
+#include "binary.h"
 
 std::allocator<Natural::uint_t> Natural::alloc;
 
@@ -16,9 +19,7 @@ Natural::Natural(uint64_t u) {
     data[i] = (u >> (bits_width * i)) & mask;
   }
   size = capacity;
-  while (size != 0 && back() == 0) {
-    --size;
-  }
+  while (size != 0 && back() == 0) { --size; }
 }
 
 Natural::Natural(Natural &&natural) noexcept {
@@ -36,9 +37,7 @@ Natural::Natural(const Natural &natural) {
   capacity = natural.size;
   data = alloc.allocate(capacity);
 
-  for (size_t i = 0; i != size; ++i) {
-    data[i] = natural[i];
-  }
+  for (size_t i = 0; i != size; ++i) { data[i] = natural[i]; }
 }
 
 Natural::~Natural() {
@@ -60,9 +59,7 @@ Natural &Natural::operator=(Natural &&natural) noexcept {
 }
 
 Natural &Natural::operator=(const Natural &natural) {
-  if (this == &natural) {
-    return *this;
-  }
+  if (this == &natural) { return *this; }
 
   this->~Natural();
 
@@ -70,9 +67,7 @@ Natural &Natural::operator=(const Natural &natural) {
   capacity = natural.size;
   data = alloc.allocate(capacity);
 
-  for (size_t i = 0; i != size; ++i) {
-    data[i] = natural[i];
-  }
+  for (size_t i = 0; i != size; ++i) { data[i] = natural[i]; }
 
   return *this;
 }
@@ -80,37 +75,30 @@ Natural &Natural::operator=(const Natural &natural) {
 void Natural::reserve_data(size_t cap) {
   if (capacity < cap) {
     uint_t *new_data = alloc.allocate(cap);
-    for (size_t i = 0; i != size; ++i) {
-      new_data[i] = data[i];
-    }
+    for (size_t i = 0; i != size; ++i) { new_data[i] = data[i]; }
     alloc.deallocate(data, capacity);
     capacity = cap;
     data = new_data;
   }
 }
 
-bool Natural::operator==(const Natural &rhs) const {
-  if (size != rhs.size) {
-    return false;
-  }
-  for (size_t i = 0; i != size; ++i) {
-    if (data[i] != rhs[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-std::strong_ordering Natural::operator<=>(const Natural &rhs) const {
-  if (size != rhs.size) {
-    return size <=> rhs.size;
-  }
+std::strong_ordering Natural::compare(const uint_t *lhs, const uint_t *rhs, size_t size) {
   for (size_t i = size; i != 0; --i) {
-    if (data[i - 1] != rhs[i - 1]) {
-      return data[i - 1] <=> rhs[i - 1];
+    if (lhs[i - 1] != rhs[i - 1]) {
+      return lhs[i - 1] <=> rhs[i - 1];
     }
   }
   return std::strong_ordering::equal;
+}
+
+bool Natural::operator==(const Natural &rhs) const {
+  if (size != rhs.size) { return false; }
+  return compare(data, rhs.data, size) == std::strong_ordering::equal;
+}
+
+std::strong_ordering Natural::operator<=>(const Natural &rhs) const {
+  if (size != rhs.size) { return size <=> rhs.size; }
+  return compare(data, rhs.data, size);
 }
 
 std::optional<Natural> Natural::parse(std::string_view sv) {

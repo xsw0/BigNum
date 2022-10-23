@@ -94,6 +94,18 @@ TEST_CASE("Natural test") {
       REQUIRE(rhs == (sum - lhs));
       REQUIRE(lhs == (Natural(sum) -= rhs));
       REQUIRE(rhs == (Natural(sum) -= lhs));
+
+      auto check_throw = [sum](Natural lhs, const Natural &rhs) {
+        auto old = lhs;
+        try {
+          lhs -= rhs;
+        } catch (std::exception &e) {
+          REQUIRE(old == lhs);
+        }
+      };
+
+      check_throw(lhs, sum + Natural{1});
+      check_throw(rhs, sum + Natural{1});
     }
 
     SECTION("mul") {
@@ -103,6 +115,22 @@ TEST_CASE("Natural test") {
       REQUIRE(Natural(mul_num) == (Natural(lhs) *= rhs));
       REQUIRE(Natural(mul_num) == (Natural(rhs) *= lhs));
     }
+
+//    SECTION("div") {
+//      auto mul = lhs * rhs;
+//      if (lhs != Natural{0}) {
+//        REQUIRE(mul / lhs == rhs);
+//        REQUIRE(rhs / lhs * lhs + rhs % lhs == rhs);
+//        REQUIRE(rhs / lhs == (Natural(rhs) /= lhs));
+//        REQUIRE(rhs % lhs == (Natural(rhs) %= lhs));
+//      }
+//      if (rhs != Natural{0}) {
+//        REQUIRE(mul / rhs == lhs);
+//        REQUIRE(lhs / rhs * rhs + lhs % rhs == lhs);
+//        REQUIRE(lhs / rhs == (Natural(lhs) /= rhs));
+//        REQUIRE(lhs % rhs == (Natural(lhs) %= rhs));
+//      }
+//    }
 
     SECTION("cmp") {
       SECTION("check equal") {
