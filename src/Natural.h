@@ -43,13 +43,13 @@ public:
 
   [[nodiscard]] Natural operator+(const Natural &rhs) const { return add(nullptr, *this, rhs); }
   [[nodiscard]] Natural operator-(const Natural &rhs) const { return sub(nullptr, *this, rhs); }
-  [[nodiscard]] Natural operator*(const Natural &rhs) const;
+  [[nodiscard]] Natural operator*(const Natural &rhs) const { return mul(nullptr, *this, rhs); };
   [[nodiscard]] Natural operator/(const Natural &rhs) const;
   [[nodiscard]] Natural operator%(const Natural &rhs) const;
 
   Natural &operator+=(const Natural &rhs) { return *this = add(this, *this, rhs); }
   Natural &operator-=(const Natural &rhs) { return *this = sub(this, *this, rhs); }
-  Natural &operator*=(const Natural &rhs);
+  Natural &operator*=(const Natural &rhs) { return *this = mul(this, *this, rhs); }
   Natural &operator/=(const Natural &rhs);
   Natural &operator%=(const Natural &rhs);
 
@@ -60,6 +60,8 @@ private:
 
   [[nodiscard]] static Natural add(Natural *dest, const Natural &lhs, const Natural &rhs);
   [[nodiscard]] static Natural sub(Natural *dest, const Natural &lhs, const Natural &rhs);
+  [[nodiscard]] static Natural mul(Natural *dest, const Natural &lhs, const Natural &rhs);
+  [[nodiscard]] static std::pair<Natural, Natural> div(Natural *dest, const Natural &lhs, const Natural &rhs);
 
   [[nodiscard]] static Natural right_move(Natural *dest, const Natural &src, size_t offset);
   [[nodiscard]] static Natural left_move(Natural *dest, const Natural &src, size_t offset);
@@ -71,8 +73,6 @@ private:
 
   constexpr uint_t &operator[](size_t index) { return data[index]; };
   [[nodiscard]] constexpr uint_t operator[](size_t index) const { return data[index]; };
-
-  void carry_to(size_t index, uint_t n);
 
   uint_t *data;
   size_t size;

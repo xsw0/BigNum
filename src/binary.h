@@ -145,17 +145,17 @@ constexpr inline U cat(U low, U high, size_t offset) {
 }
 
 template<UnsignedIntegral U>
-constexpr inline void move_forward(U *dest, const U *src, size_t size) {
+constexpr inline void move_forward(U dest[], const U src[], size_t size) {
   for (size_t i = 0; i != size; ++i) { dest[i] = src[i]; }
 }
 
 template<UnsignedIntegral U>
-constexpr inline void move_backward(U *dest, const U *src, size_t size) {
+constexpr inline void move_backward(U dest[], const U src[], size_t size) {
   for (size_t i = size; i != 0; --i) { dest[i - 1] = src[i - 1]; }
 }
 
 template<UnsignedIntegral U>
-constexpr inline U bits_right_move(U *dest, const U *src, size_t size, size_t offset) {
+constexpr inline U bits_move_forward(U *dest, const U *src, size_t size, size_t offset) {
   constexpr size_t bits_width = sizeof(U) * 8;
   assert(size != 0);
   size_t bound = size - 1;
@@ -168,7 +168,7 @@ constexpr inline U bits_right_move(U *dest, const U *src, size_t size, size_t of
 }
 
 template<UnsignedIntegral U>
-constexpr inline U bits_left_move(U *dest, const U *src, size_t size, size_t offset) {
+constexpr inline U bits_move_backward(U *dest, const U *src, size_t size, size_t offset) {
   constexpr size_t bits_width = sizeof(U) * 8;
   assert(size != 0);
   size_t bound = size - 1;
@@ -178,6 +178,76 @@ constexpr inline U bits_left_move(U *dest, const U *src, size_t size, size_t off
   }
   dest[0] = Binary::cat(U{0}, src[0], bits_width - offset);
   return result;
+}
+
+template<UnsignedIntegral U>
+constexpr inline U half_add(U *dest, const U *src, size_t size, U carry = 1) {
+  for (size_t i = 0; i != size; ++i) {
+    U sum = src[i] + carry;
+    carry = Binary::carry_add(carry, src[i]);
+    dest[i] = sum;
+  }
+  return carry;
+}
+
+template<UnsignedIntegral U>
+constexpr inline U add(U dest[], const U lhs[], const U rhs[], size_t size) {
+  U carry = 0;
+  for (size_t i = 0; i != size; ++i) {
+    U sum = lhs[i] + rhs[i] + carry;
+    carry = Binary::carry_add(lhs[i], rhs[i]) + Binary::carry_add<U>(lhs[i] + rhs[i], carry);
+    dest[i] = sum;
+  }
+  return carry;
+}
+
+template<UnsignedIntegral U>
+constexpr inline U sub(U dest[], const U lhs[], size_t lhs_size, const U rhs[], size_t rhs_size) {
+  assert(lhs_size >= rhs_size);
+
+  U borrow = 0;
+  size_t i = 0;
+  for (; i < rhs_size; ++i) {
+    if (borrow) {
+      borrow = lhs[i] <= rhs[i];
+      dest[i] = lhs[i] - rhs[i] - 1;
+    } else {
+      borrow = lhs[i] < rhs[i];
+      dest[i] = lhs[i] - rhs[i];
+    }
+  }
+  while (i != lhs_size && borrow) {
+    borrow = lhs[i] == 0;
+    dest[i] = lhs[i] - 1;
+    ++i;
+  }
+  if (dest != lhs) {
+    for (; i != lhs_size; ++i) {
+      dest[i] = lhs[i];
+    }
+  }
+  return borrow;
+}
+
+template<UnsignedIntegral U>
+constexpr inline void mul(U dest[], const U lhs[], size_t lhs_size, const U rhs[], size_t rhs_size) {
+  assert(!(dest >= lhs && dest < lhs + lhs_size));
+  assert(!(dest >= rhs && dest < rhs + rhs_size));
+  for (size_t i = 0, bound = lhs_size + rhs_size; i != bound; ++i) { dest[i] = 0; }
+  for (size_t l = 0; l != lhs_size; ++l) {
+    for (size_t r = 0; r != rhs_size; ++r) {
+      size_t index = l + r;
+      U prod_carry[2]{U(lhs[l] * rhs[r]), Binary::carry_mul(lhs[l], rhs[r])};
+      U carry = add(dest + index, dest + index, prod_carry, 2);
+      index += 2;
+      while (carry) {
+        U sum = dest[index] + carry;
+        carry = Binary::carry_add(carry, dest[index]);
+        dest[index] = sum;
+        ++index;
+      }
+    }
+  }
 }
 
 }

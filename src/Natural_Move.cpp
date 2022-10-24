@@ -20,7 +20,7 @@ Natural Natural::right_move(Natural *dest, const Natural &src, size_t offset) {
   if (bit_offset == 0) {
     Binary::move_forward(dest->data, src.data + index_offset, src.size - index_offset);
   } else {
-    Binary::bits_right_move(dest->data, src.data + index_offset, src.size - index_offset, bit_offset);
+    Binary::bits_move_forward(dest->data, src.data + index_offset, src.size - index_offset, bit_offset);
   }
 
   dest->size = target_size;
@@ -43,7 +43,7 @@ Natural Natural::left_move(Natural *dest, const Natural &src, size_t offset) {
   if (bit_offset == 0) {
     Binary::move_backward(dest->data + index_offset, src.data, src.size);
   } else {
-    uint_t res = Binary::bits_left_move(dest->data + index_offset, src.data, src.size, bit_offset);
+    uint_t res = Binary::bits_move_backward(dest->data + index_offset, src.data, src.size, bit_offset);
     assert(carry == res);
   }
 
