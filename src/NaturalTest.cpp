@@ -95,7 +95,7 @@ TEST_CASE("Natural test") {
       REQUIRE(lhs == (Natural(sum) -= rhs));
       REQUIRE(rhs == (Natural(sum) -= lhs));
 
-      auto check_throw = [sum](Natural lhs, const Natural &rhs) {
+      auto check_throw = [&](Natural lhs, const Natural &rhs) {
         auto old = lhs;
         try {
           lhs -= rhs;

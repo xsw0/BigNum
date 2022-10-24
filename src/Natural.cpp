@@ -61,11 +61,8 @@ Natural &Natural::operator=(Natural &&natural) noexcept {
 Natural &Natural::operator=(const Natural &natural) {
   if (this == &natural) { return *this; }
 
-  this->~Natural();
-
-  size = natural.size;
-  capacity = natural.size;
-  data = alloc.allocate(capacity);
+  size = 0;
+  reserve_data(natural.size);
 
   for (size_t i = 0; i != size; ++i) { data[i] = natural[i]; }
 

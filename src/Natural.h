@@ -11,6 +11,9 @@
 class Natural final {
 private:
   using uint_t = uint8_t;
+//  using uint_t = uint16_t;
+//  using uint_t = uint32_t;
+//  using uint_t = uint64_t;
 
   constexpr static size_t bits_width = 8 * sizeof(uint_t);
 
@@ -58,13 +61,13 @@ public:
 private:
   [[nodiscard]] static std::strong_ordering compare(const uint_t *lhs, const uint_t *rhs, size_t size);
 
+  [[nodiscard]] static Natural right_move(Natural *dest, const Natural &src, size_t offset);
+  [[nodiscard]] static Natural left_move(Natural *dest, const Natural &src, size_t offset);
+
   [[nodiscard]] static Natural add(Natural *dest, const Natural &lhs, const Natural &rhs);
   [[nodiscard]] static Natural sub(Natural *dest, const Natural &lhs, const Natural &rhs);
   [[nodiscard]] static Natural mul(Natural *dest, const Natural &lhs, const Natural &rhs);
-  [[nodiscard]] static std::pair<Natural, Natural> div(Natural *dest, const Natural &lhs, const Natural &rhs);
-
-  [[nodiscard]] static Natural right_move(Natural *dest, const Natural &src, size_t offset);
-  [[nodiscard]] static Natural left_move(Natural *dest, const Natural &src, size_t offset);
+  [[nodiscard]] static Natural div(Natural *dest, const Natural &lhs, const Natural &rhs);
 
   void reserve_data(size_t cap);
 

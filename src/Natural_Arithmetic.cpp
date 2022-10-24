@@ -20,10 +20,9 @@ Natural Natural::add(Natural *dest, const Natural &lhs, const Natural &rhs) {
   carry = Binary::half_add(dest->data + lhs.size, rhs.data + lhs.size, rhs.size - lhs.size, carry);
 
   dest->data[rhs.size] = carry;
+  dest->size = rhs.size + carry;
 
-  natural.size = rhs.size + carry;
-
-  return *dest;
+  return std::move(*dest);
 }
 
 Natural Natural::sub(Natural *dest, const Natural &lhs, const Natural &rhs) {
@@ -36,6 +35,8 @@ Natural Natural::sub(Natural *dest, const Natural &lhs, const Natural &rhs) {
   }
 
   uint_t borrow = Binary::sub(dest->data, lhs.data, lhs.size, rhs.data, rhs.size);
+  dest->size = lhs.size;
+  while (dest->size != 0 && dest->back() == 0) { --dest->size; }
   if (borrow) {
     if (dest != &natural) {
       *dest += rhs;
@@ -44,9 +45,7 @@ Natural Natural::sub(Natural *dest, const Natural &lhs, const Natural &rhs) {
     }
     throw std::runtime_error("overflow");
   }
-  dest->size = lhs.size;
-  while (dest->size != 0 && dest->back() == 0) { --dest->size; }
-  return *dest;
+  return std::move(*dest);
 }
 
 Natural Natural::mul(Natural *dest, const Natural &lhs, const Natural &rhs) {
@@ -64,12 +63,22 @@ Natural Natural::mul(Natural *dest, const Natural &lhs, const Natural &rhs) {
   if (dest->back() == 0) { --dest->size; }
   assert(dest->back() != 0);
 
-  return *dest;
+  return std::move(*dest);
 }
 
-//std::pair<Natural, Natural> Natural::div(Natural *dest, const Natural &lhs, const Natural &rhs) {
-//}
-//
+Natural Natural::div(Natural *dest, const Natural &lhs, const Natural &rhs) {
+  Natural quotient;
+  Natural remainder;
+
+  if (rhs.size == 0) { throw std::runtime_error("division by zero exception"); }
+  if (dest != &lhs) {
+    remainder = lhs;
+    dest = &remainder;
+  }
+
+  return quotient;
+}
+
 //std::pair<Natural, Natural> Natural::div(const Natural &rhs) const {
 //}
 //
