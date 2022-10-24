@@ -11,7 +11,7 @@
 
 TEST_CASE("Binary test") {
   SECTION("bits") {
-    uint64_t n = GENERATE_REF(range(0, 9));
+    uint64_t n = GENERATE_REF(range(0, 8));
     Binary::UnsignedIntegral auto res = Binary::bits<uint8_t>(n);
     uint64_t x = (1 << n) - 1;
     CAPTURE(n, res, x);

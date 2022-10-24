@@ -24,7 +24,7 @@ Natural Natural::right_move(Natural *dest, const Natural &src, size_t offset) {
   }
 
   dest->size = target_size;
-  return *dest;
+  return std::move(*dest);
 }
 
 Natural Natural::left_move(Natural *dest, const Natural &src, size_t offset) {
@@ -33,7 +33,7 @@ Natural Natural::left_move(Natural *dest, const Natural &src, size_t offset) {
 
   if (src.size == 0) { return {}; }
 
-  uint_t carry = Binary::cat(src.back(), uint_t{0}, bits_width - bit_offset);
+  uint_t carry = bit_offset == 0 ? 0 : Binary::cat(src.back(), uint_t{0}, bits_width - bit_offset);
   size_t target_size = src.size + index_offset + (carry != 0);
 
   Natural natural;
@@ -52,5 +52,5 @@ Natural Natural::left_move(Natural *dest, const Natural &src, size_t offset) {
   dest->size = target_size;
   if (carry) { dest->back() = carry; }
 
-  return *dest;
+  return std::move(*dest);
 }

@@ -17,7 +17,7 @@ concept UnsignedIntegral = Integral<T> && !SignedIntegral<T>;
 template<UnsignedIntegral U>
 constexpr inline U &bits_set(U &u, size_t pos) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  assert(pos <= bits_width);
+  assert(pos < bits_width);
   u |= U{1} << pos;
   return u;
 }
@@ -25,7 +25,7 @@ constexpr inline U &bits_set(U &u, size_t pos) {
 template<UnsignedIntegral U>
 constexpr inline U &bits_reset(U &u, size_t pos) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  assert(pos <= bits_width);
+  assert(pos < bits_width);
   u &= ~U(U{1} << pos);
   return u;
 }
@@ -33,7 +33,7 @@ constexpr inline U &bits_reset(U &u, size_t pos) {
 template<UnsignedIntegral U>
 constexpr inline U &bits_flip(U &u, size_t pos) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  assert(pos <= bits_width);
+  assert(pos < bits_width);
   u ^= U{1} << pos;
   return u;
 }
@@ -41,7 +41,7 @@ constexpr inline U &bits_flip(U &u, size_t pos) {
 template<UnsignedIntegral U>
 constexpr inline bool bits_test(U u, size_t pos) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  assert(pos <= bits_width);
+  assert(pos < bits_width);
   return (u & U(U{1} << pos)) != 0;
 }
 
@@ -49,18 +49,23 @@ template<UnsignedIntegral U>
 constexpr inline U bits(size_t size) {
   constexpr size_t bits_width = sizeof(U) * 8;
   assert(size <= bits_width);
-  return U(~0) >> (bits_width - size);
+  if (size == bits_width) { return ~0; }
+  return (U(1) << size) - 1;
 }
 
 template<UnsignedIntegral U>
 constexpr inline U high_bits(U u, size_t size) {
   constexpr size_t bits_width = sizeof(U) * 8;
+  assert(size > 0);
+  assert(size <= bits_width);
   return u >> (bits_width - size);
 }
 
 template<UnsignedIntegral U>
 constexpr inline U low_bits(U u, size_t size) {
   constexpr size_t bits_width = sizeof(U) * 8;
+  assert(size > 0);
+  assert(size <= bits_width);
   return u & bits<U>(size);
 }
 
@@ -141,6 +146,8 @@ constexpr inline uint32_t carry_mul<uint32_t>(uint32_t lhs, uint32_t rhs) {
 template<UnsignedIntegral U>
 constexpr inline U cat(U low, U high, size_t offset) {
   constexpr size_t bits_width = sizeof(U) * 8;
+  assert(offset > 0);
+  assert(offset < bits_width);
   return (high << (bits_width - offset)) | (low >> offset);
 }
 
@@ -157,7 +164,7 @@ constexpr inline void move_backward(U dest[], const U src[], size_t size) {
 template<UnsignedIntegral U>
 constexpr inline U bits_move_forward(U *dest, const U *src, size_t size, size_t offset) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  assert(size != 0);
+  assert(size > 0);
   size_t bound = size - 1;
   U result = Binary::cat(U{0}, src[0], offset);
   for (size_t i = 0; i != bound; ++i) {
@@ -170,7 +177,7 @@ constexpr inline U bits_move_forward(U *dest, const U *src, size_t size, size_t 
 template<UnsignedIntegral U>
 constexpr inline U bits_move_backward(U *dest, const U *src, size_t size, size_t offset) {
   constexpr size_t bits_width = sizeof(U) * 8;
-  assert(size != 0);
+  assert(size > 0);
   size_t bound = size - 1;
   U result = Binary::cat(src[bound], U{0}, bits_width - offset);
   for (size_t i = bound; i != 0; --i) {
